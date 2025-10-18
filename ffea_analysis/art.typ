@@ -106,6 +106,71 @@ Lastly looking at the colours of the larger files three files are exceptionally 
 
 #pagebreak()
 
+= 4+1 Diagram
+== Logical View
+```pintora
+  classDiagram
+  class InputReader{}
+  class MaskGeomtryModel{}
+  class CoreSimulationLoop{}
+  class ProteinSimulationCaluclator{}
+  class BoundaryCalculator{}
+  class PhysicsProcesses{}
+  class Renderer{}
+
+  InputReader --> CoreSimulationLoop : Sends data to
+  CoreSimulationLoop --> MaskGeometryModel : Makes Calls to
+  ProteinSimulationCalculator --> BoundaryCalculator : Makes Calls to
+  PhysicsProcesses --> BoundaryCalculator : Makes Calls to
+  CoreSimulationLoop --> PhysicsProcesses : Makes calls to
+  CoreSimulationLoop --> ProteinSimulationCalculator : Makes Calls to
+  CoreSimulationLoop --> MaskGeometryModel : Makes Calls to
+  CoreSimulationLoop --> Renderer : Sends data to
+```
+
+== Process View
+
+```pintora
+classDiagram
+class CoreSimulation {
+  calculateParticle()
+}
+
+class Visualisation{
+  visualise()
+}
+
+class worker1{
+  doCalculation()
+}
+class workerN{
+  doCalculation()
+}
+
+CoreSimulation --> Visualisation
+CoreSimulation --> worker1
+CoreSimulation --> workerN
+```
+
+== Developmental View
+- The file structure is flat
+- There is a high level of redundant code
+- There is a god class called world
+- The tests dont pass
+- There are two main simulation sections being rods and blobs
+- There is a logical separation between rendering and simulation due to pyton vs c++ being used
+
+== Physical viewa
+#figure(
+  ```pintora
+  classDiagram
+  class linuxormacmachine{
+      + main program
+      + worker threads
+  }
+
+  ```
+)
 
 = SonarQube Diagram
 #figure(

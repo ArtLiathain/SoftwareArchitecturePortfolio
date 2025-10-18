@@ -43,13 +43,18 @@ mindmap
 ++ Particle track reconstruction for high energy physics
 ++ Extensive test bed for high modularity testing
 ++ Geometry material modelling
+++ Detector Material Modelling
+++ GPU support
 + Supporting Domain
 ++ Atlas Common Tracking Software
 ++ Open Data Detector
 ++ Machine learning
+++ Hadronic Field Modelling
+++ Magnetic Field Modelling
 + Generic Domain
 ++ Runge-Kutta-Nyström RKN method
-
+++ Kalman Filter
+++ High non-gaussian systems
 ```,
   caption: [Domain Model]
 )
@@ -86,41 +91,67 @@ mindmap
 
 
 = 4+1 Diagram
+
+== Logical View
 #figure(```pintora
 classDiagram
-  class UserInterfaces {
-    + input
-    + output
-    + calculateOutput()
+  class TrackReconstruction{
   }
-  class MathematicalFunctions {
-    + doMath()
+  class VertexReconstruction{
   }
-
-  class CoreFunctionLoop {
-    + doCalculation()
+  class PatternRecognition{
   }
-
-  class GeometryMeshFunctions {
-    + drawSquare()
+  class ParticleIdentifier{
   }
-
-  class ParticleTrackingFunctions {
-    + findParticle()
+  class VisualisationFramework{
   }
-
-  UserInterfaces --> CoreFunctionLoop : Gets called and returns output of core function loop
-  CoreFunctionLoop --> GeometryMeshFunctions : Models the material and geometry
-  CoreFunctionLoop --> ParticleTrackingFunctions : Tracks particles based on input params
-  CoreFunctionLoop --> MathematicalFunctions : Utility math functions to be called
-  CoreFunctionLoop --> UserInterfaces 
+  class PerformanceOptimisation{}
+  class Simulation{}
+  class CoreApplication{}
+  class UserInterface{}
+  class AlgorithmApp{}
+  UserInterface --> CoreApplication : Sends Requests to
+  CoreApplication --> AlgorithmApp : Makes calls to
+  AlgorithmApp --> TrackReconstruction : Makes calls to
+  AlgorithmApp --> VertexReconstruction : Makes calls to
+  AlgorithmApp --> PatternRecognition : Makes calls to
+  AlgorithmApp --> ParticleIdentifier : Makes calls to
+  AlgorithmApp --> VisualisationFramework : Makes calls to
+  AlgorithmApp --> PerformanceOptimisation : Makes calls to
+  CoreApplication --> Simulation : Makes calls to
 
 ```,
 caption: []
 )
 
+== Process view
 
+#figure(
+  ```pintora
+  classDiagram
+  class SimulationProcess{}
+  class CalculationProcessLoop{}
+  
+  CalculationProcessLoop --> SimulationProcess : Might make calls to
+  ```,
+  caption: [Process view]
+)
 
+== Physcial View
+#figure(
+  ```pintora
+  classDiagram
+    class LinuxOrMacMachine{
+      + Main program
+  }
+
+  ```
+)
+
+== Development View
+- There are two layers of folder organistion in the codebase. The first is include/ and src/ follwing that there are logical groupings such as Geometry/ but there are some subfolders with a high file count befitting another layer of depth which is not in place. Geometry/ has over 30 files flat
+- There is a consistent commit structure and rule
+- Integration tests are loosely handled in 
 
 = Codescene
 #figure(
@@ -168,3 +199,19 @@ caption: []
   image("2025-10-14-12:22:07.png", width:80%),
   caption: []
 )
+
+= C4
+#figure(
+  image("2025-10-16-15:12:38.png", width:80%),
+  caption: [Context Diagram]
+)
+
+#figure(
+  image("2025-10-16-15:12:45.png", width:80%),
+caption: [Component Diagram]
+)
+#figure(
+  image("2025-10-16-15:12:48.png", width:80%),
+  caption: [Container Diagram]
+)
+

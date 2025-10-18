@@ -81,6 +81,89 @@ Useability is important to allow for a wide range of user testing and user usage
 )
 This use case diagram shows the flow directly from script creation to the output. This shows how the script once inputted into Merlin first models the structure of the simulations. THis is then passed to the simulation section which then simulates accoring to the parameters outputting an output.dat.
 This is a well made system but the main gripe i have is with the entrypint being a user made script, within my understanding even a config file would be preferable to make the system simpler to understand and remove the need for in depth tutorials for basic use.
+
+= 4 + 1 Diagram
+== Logical View
+```pintora
+classDiagram
+class CoreSimLoop{
+  doSimulation()
+}
+
+class PhysicsProcesses{
+  doPhyscis()
+}
+
+class InputSystem{
+  readInput()
+}
+
+class VisualisationFramework{
+  render()
+}
+
+class AcceleratorModels{
+  accelerate()
+}
+
+class Models{
+  model()
+}
+
+class LatticeModel{
+  func()
+}
+
+class InputReader{
+  readInput()
+}
+
+InputReader --> Models : Sends params
+Models --> AcceleratorModels : Creates
+Models --> LatticeModel : Creates
+Models --> CoreSimLoop : Sends models as base
+CoreSimLoop --> PhysicsProcesses : Depends on
+CoreSimLoop --> VisualisationFramework : Sends output to
+
+```
+== Physical View
+```pintora
+classDiagram
+class LinuxOrMacMachine{
+  + worker thread
+  + main thread
+}
+```
+
+
+== Development View
+- The structure of the code is flat there is no file or folder organisation
+- There are larger multiclass components such as Particle tracking, Physics processes and lattice calcualtions but these are only grouped in code not in file structure
+- There are no git rules for commits
+
+== Process View
+```pintora
+classDiagram
+class CoreSimulation {
+  calculateParticle()
+}
+
+class Visualisation{
+  visualise()
+}
+
+class worker1{
+  doCalculation()
+}
+class workerN{
+  doCalculation()
+}
+
+CoreSimulation --> Visualisation
+CoreSimulation --> worker1
+CoreSimulation --> workerN
+```
+Each node represents a thread in the process view where the Core simulation can spin up worker threads for calculations in a HPC environment
 = Codescene
 #figure(
   image("codescene_coupling.png"),

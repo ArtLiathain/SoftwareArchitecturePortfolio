@@ -25,6 +25,10 @@ October 2025
 #pagebreak
 
 = Tech Stack
+- Renderer : Unity with C\#
+- Interaction Framework : Steam VR
+- Simulation Framework : C++ with eigen and boost
+- Tests : Ctest with python add ons
 
 
 = Domain Model
@@ -35,6 +39,10 @@ mindmap
 + Core Domain
 ++ User interaction with 3D datasets
 ++ Deep interaction with 3D environment screenshots, movement maps, etc
+++ Volumetric Shaders
+++ VR Rendering
+++ Friendly GUI
+++ Masking Data
 + Supporting Domain
 ++ Galaxy galaxy interactino modelling
 ++ Cosmic web large scale structure
@@ -74,6 +82,47 @@ mindmap
 = Use case diagram 
 
 #figure(image("2025-10-07-21:10:14.png", width: 80%), caption: [Use case state machine])
+
+= 4 + 1 Diagram
+= Logical View
+#figure(
+  image("Pasted image 20251014134042.png", width: 80%),
+  caption : [Logical View]
+)
+
+= Physical view
+```pintora
+classDiagram
+class LinuxOrMacMachine{
+  + data thread
+  + main thread
+  + simulation thread
+}
+```
+== Process View
+```pintora
+classDiagram
+class CoreSimulation {
+  calculateParticle()
+}
+
+class DataManagement{}
+
+class Visualisation{
+  visualise()
+}
+
+CoreSimulation --> Visualisation
+CoreSimulation --> DataManagement
+```
+= Developmental View
+- Not extensible, forking is recommmended to add large features
+- High change propagation
+- Current core is fairly static
+- Data management is the largest dependency and a core of the codebase
+- There is logcial grouping of files
+- No automated tests
+- PRs need to go through manual testing via form for changes
 
 = Codescene
 #figure(image("2025-10-07-17:28:17.png", width: 80%), caption: [Codescene coupling diagram 40%])
