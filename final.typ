@@ -34,7 +34,7 @@ The code has an accidental architecture as an ad-hoc feature development approac
 
 
 While successful in achieving functionality the code architecture makes change difficult and has slowed the potential development of features due to the complexity of adding new features.
-This architecture is something that will not last in the long term and a purpose picked architecture is needed to support the l:wqong running development and maintenance of the project in future.
+This architecture is something that will not last in the long term and a purpose picked architecture is needed to support the long running development and maintenance of the project in future.
 
 
 == Proposed Architecture
@@ -57,11 +57,11 @@ This re-architecture is feasible due to the big shutdown happening to Merlin.
 As just fixing the code is a monumental task, seen here @merlin_technical_debt_cost.
 To take full advantage of the shutdown I propose to rewrite the codebase in Rust.
 
-Adopting a microkernel architecture would provide a stable testable core, while rust would optimise the performance and robustness of the simulation, integral to high precision simulations.
+Adopting a microkernel architecture would provide a stable testable core, while rust would optimise the performance and robustness of the simulation, integral to high precision simulations (highlighted here @merlin_utility_tree).
 These changes would improve the long term maintainability of the code, as well as preventing unsafe code from entering the codebase.
 
 Additionally, Rust inherently supports the functional programming paradigm, which I believe is well placed in the plugin-based architecture.
-If plugins are enforced to be functional, they will act as stateless modules interacting through interfaces, reducing the risk of architectural drift as a plugin with state could become a dependency (CITE HERE).
+If plugins are enforced to be functional, they will act as stateless modules interacting through interfaces, reducing the risk of architectural drift @ernst_technical_2021 as a plugin with state could become a dependency.
 Merlin can then maintain clear separation between the stable simulation kernel and user-developed extensions, ensuring long-term scalability and maintainability while allowing feature flexibility.
 
 
@@ -255,13 +255,57 @@ Each node represents a thread in the process view where the Core simulation can 
 ) <tech_stack>
 
 #pagebreak()
-== Fluctuating Finite Element Analysis (FFEA) Case Study 
+= Fluctuating Finite Element Analysis (FFEA) Case Study
 
-== Tech Stack
+== Current state
+FFEA is a tool primarily focused on simulating larger scale proteins using tetrahedrons (@ffea_domain_model) as well as preparing protein files for simulation(FFEA Tools).
+The tool works as intended but due to the haphazard development a God class based architecture has developed as seen in @ffea_class_diagram.
+Overloaded classes blatantly breaking single single responsibility has lead to classes with cyclomatic complexity in the hundreds @ffea_complexity_diagram.
+
+
+Complexity at this scale severely reduces the capabilities of new developers contributing to the project as the god class must be understood at a base level. 
+Reducing the number of new experiments that can be carried out.
+
+
+== Proposed Architecture
+The current state of the project needs extensibility and maintainability as core parts of the new architecture as described @ffea_utility_tree.
+The architecture that best fits the use case is a microkernel architecture @rana_survey_2023. 
+A microkernel architecture is a system built around a single purpose, in this case simulation while allowing a plug-in system to introduce new functionality without changing the core code @rana_survey_2023.
+
+#figure(image("./images/2025-10-23-14:21:46.png"),
+caption: [MicroKernel Architecture Diagram])
+
+
+
+The advantages this brings are numerous:
+- The core code being largely static encourages *testability* and *robustness* as a set of comprehensive tests to be developed and maintained.
+- As the kernel will be the focus of development *performance* can be improved more easily.
+- Removing the plugins from the core developer responsibilities improves *maintainability* as only the core code must be maintained.
+- The plugin system allows for development *extensibility*, allowing new features without changing the core code.
+
+
+== Reasoning
+The accidental architecture of god classes in FFEA lends itself well inferring what should be made the microkernel.
+The god class (Seen in @ffea_C4_diagram) in FFEA is a solid starting point to the refactor, tackling the biggest problem (@ffea_architecture_codesense)  and converting it to a solid foundation to the new architecture.
+This approach addresses the root of the maintainability issue rather than layering more complexity on top.
+
+
+By adopting a microkernel architecture, FFEA can evolve into a modular and sustainable framework where new experiments and simulation types can be added without disrupting the existing system.
+Plug-ins allow for contributors who are focused on testing a new experiment instead of long term code quality can implement features without architecture erosion @ernst_technical_2021.
+This shift towards microkernel prioritizes maintainability performance within the core codebase and extensibility for new scientists — the key qualities identified that FFEA needs.
+
+== Conclusion
+There is a lot of work to do with FFEA, the codebase is in a continuous loop of; no development, funding for new experiment, implement experiment and repeat.
+This vicious cycle is why the code is in the current state as there are no incentives for clean code.
+The proposed solution fits well to enable extensibility by many researchers while still preserving the core code from deteriorating between funding cycles.
+
+== Diagrams
+
+=== Tech Stack
 
 #figure(
   image("images/ffea/tech_stack.png", width: 60%),
-  caption: [Tech Stack]
+  caption: [FFEA Tech Stack]
 )
 The tech stack is primarily focused on C++, the processing and the simulations are all carried out in C++, this is a natural choice as performance is a tenant of the program. The visualisations build on the PyMol library with a plugin. This leads to a natural decoupling where visualisation is separated from processing. This is a suitable tech stack for the project allow for a modular approach and follwing the qualities required for the project. 
 
@@ -285,27 +329,46 @@ mindmap
 ++ Computational Biophysics
 
 ```,
-  caption: [Domain Model]
-)
+  caption: [FFEA Domain Model]
+) <ffea_domain_model>
 
 
 
 
-== Use Case Diagram
+=== Use Case Diagram
 #figure(
 
   image("images/ffea/Use_case.png", width: 80%),
-  caption: [Use Case Diagrams]
+  caption: [FFEA Use Case Diagrams]
+  
 )
 The primary use case for FFEA is to process protein files to then simulate under user desired conditions. The interface is rudimentary in terms of use as the complexity lies in both the simulation and parameters which means that a simple process still has layers of complexity. Looking at the use case there could be an argument to bundle the tooling as the whole purpose of ffeatools is to prepare files for ffea meaning a single unified process that processes then displays based on cli arguments would streamline the process.
 
 
 
-== Utility Tree
+=== Utility Tree
 #figure(
-  image("images/ffea/utility_tree.png", width: 80%),
+  ```pintora
+  mindmap
+  @param layoutDirection LR
+  + Maintainability
+  ++ Enforce a clear and consistent file structure
+  ++ Obey SOLID Principles in class design
+  ++ No files with a cyclomatic complexity over 10
+  ++ The core classes must not require change for a experiment modification
+  + Extensability
+  ++ New experiments must not change core functionality
+  ++ Experiment features must be able to be combined
+  + Performance
+  ++ The code must be written in a compiled language
+  ++ The code must not leak memory
+  ++ The code must use paralellism
+  + Useability
+  ++ The tool must use docker with containerisation
+  ++ The tool must accept external protein files
+  ```,
   caption: [Utility Tree]
-)
+) <ffea_utility_tree>
 The utility tree is quite idealistic of aspirational long term goals of the project. There is a heavy focus on maintainability as that must be a tenant of the software for the longevity of the project and research. The maintainability goals have been selected as the foundational work needed in terms of refactoring to move the project to a useable state before any new features are added. 
 
 Testability is primarily focused on having a robust test suite to test against to allow simpler refactoring. The goal of 100% test coverage is lofty but a necessary requirement to allow for refactoring with confidence.
@@ -314,7 +377,7 @@ Performance is a tenant that is key to the project through the functional requir
 
 Useability is targeted towards allowing this tool to be run anywhere regardless of OS as Windows is not supported now but docker can resilve this. THe tool must allow for users to interact with it without needing the wiki to see the help commands and simple processing as well to allow for easier and more vaired user testing and feedback.
 
-== SysML Diagram
+=== SysML Diagram
 #figure(
   image("images/ffea/sysMl.png", width: 80%),
   caption: [SysML Diagram]
@@ -322,11 +385,11 @@ Useability is targeted towards allowing this tool to be run anywhere regardless 
 The SysML diagram highlights the standout requirements of the tool to allow for accurate protein simulations to be done with respect to user input. There are undoubtedly many more functional requirements but assuming the simulations as primarily a black box the requirements centre around accurate simulations to be done and visualised based on the user configuration allowing for the correct interactions to be observed. The requirements are broken into three large logical sections being the processing, simulating and visualing. This SysML structure allows for room for growth as more requirements are discovered.
 
 
-== Codesense Diagram
+=== Codesense Diagram
 #figure(
   image("images/ffea/codesense_architecture.png", width: 80%),
   caption: [Codesense Architecture Diagram]
-)
+) <ffea_architecture_codesense>
 This digram highlights three key things about the architecture decisions taken for this project. The first feature being the flat structure taken for src, this means that all files are the same level and there is no logical grouping for any of the src files which makes grouping much more difficult. The is in spite of the fact that the test files are very well structured.
 
 This leads into the second point of the severe size difference in size between tests and src, this signifies a significant amount of the code is untested making it much more difficult to add to the codebase with confidence.
@@ -335,9 +398,8 @@ Lastly looking at the colours of the larger files three files are exceptionally 
 
 
 
-#pagebreak()
 
-== 4+1 Diagram
+=== 4+1 Diagram
 === Logical View
 ```pintora
   classDiagram
@@ -403,11 +465,11 @@ CoreSimulation --> workerN
   ```
 )
 
-== SonarQube Diagram
+=== SonarQube Diagram
 #figure(
   image("images/ffea/sonarqube_complexity.png", width: 80%),
   caption: [SonarQube Complexity Diagram]
-)
+) <ffea_complexity_diagram>
 #figure(
   image("images/ffea/sonarqube_maintainability.png", width: 80%),
   caption: [Understand Function Analysis]
@@ -415,7 +477,7 @@ CoreSimulation --> workerN
 This is the cyclomatic complexity of the offending files and others from the codesense analysis. 
 
 
-== DV8
+=== DV8
 #figure(
   image("images/ffea/dv8_high_level.png", width: 80%),
   caption: [Understand Function Analysis]
@@ -425,7 +487,7 @@ This is the cyclomatic complexity of the offending files and others from the cod
   caption: [Understand Function Analysis]
 )
 
-== Understand
+=== Understand
 #figure(
   image("images/ffea/understand_function.png", width: 80%),
   caption: [Understand Function Analysis]
@@ -435,35 +497,35 @@ This is the cyclomatic complexity of the offending files and others from the cod
   caption: [Understand Function Analysis]
 )
 
-== C4 Diagram
+=== C4 Diagram
 #figure(
   image("images/ffea/2025-10-08-11:06:59.png", width:80%),
   caption: [C4 Diagram]
-)
+) <ffea_C4_diagram>
 
-== Dependency Graph
+=== Dependency Graph
 #figure(
   image("images/ffea/2025-10-09-13:50:35.png", width:80%),
   caption: [Dependency Graph]
 )
 
-== Class Diagram
+=== Class Diagram
 #figure(
   image("images/ffea/2025-10-09-13:51:26.png", width: 80%),
-  caption: [Class Diagram]
-)
+  caption: [FFEA Class Diagram]
+) <ffea_class_diagram>
 
 #pagebreak()
 = iDavie Case Study
-
-== Tech Stack
+== Diagrams
+=== Tech Stack
 - Renderer : Unity with C\#
 - Interaction Framework : Steam VR
 - Simulation Framework : C++ with eigen and boost
 - Tests : Ctest with python add ons
 
 
-== Domain Model
+=== Domain Model
 #figure(
 ```pintora
 mindmap
@@ -489,7 +551,7 @@ mindmap
 )
 
 
-== Utility Tree
+=== Utility Tree
 #figure(
 ```pintora
 mindmap
@@ -511,11 +573,11 @@ mindmap
 ```,
   caption: [Utility Tree]
 )
-== Use case diagram 
+=== Use case diagram 
 
 #figure(image("images/idavie/2025-10-07-21:10:14.png", width: 80%), caption: [Use case state machine])
 
-== 4 + 1 Diagram
+=== 4 + 1 Diagram
 === Logical View
 #figure(
   image("images/idavie/Pasted image 20251014134042.png", width: 80%),
@@ -556,24 +618,24 @@ CoreSimulation --> DataManagement
 - No automated tests
 - PRs need to go through manual testing via form for changes
 
-== Codescene
+=== Codescene
 #figure(image("images/idavie/2025-10-07-17:28:17.png", width: 80%), caption: [Codescene coupling diagram 40%])
 #figure(image("images/idavie/2025-10-07-17:27:55.png", width: 80%), caption: [Codescene Maintenance Diagram])
 #figure(image("images/idavie/2025-10-07-22:03:44.png", width: 80%), caption: [Codescene Hotspot overview])
-== Sonarqube 
+=== Sonarqube 
 #figure(image("images/idavie/2025-10-07-22:02:56.png", width: 80%), caption: [Sonarqube cyclomatic complexity])
 #figure(image("images/idavie/2025-10-07-22:03:05.png", width: 80%), caption: [Sonarqube maintainability])
 #figure(image("images/idavie/2025-10-07-22:03:10.png", width: 80%), caption: [Sonarqube reliability graph])
 
 #figure(image("images/idavie/2025-10-07-22:03:24.png", width: 80%), caption: [Duplications Graph])
 
-== Understand Code Analysis
+=== Understand Code Analysis
 #figure(
   image("images/idavie/2025-10-09-13:46:42.png", width: 80%),
   caption: []
 )
 
-== Class Diagrams
+=== Class Diagrams
 #figure(
   image("images/idavie/2025-10-09-13:48:25.png", width: 80%),
   caption: []
@@ -583,7 +645,7 @@ CoreSimulation --> DataManagement
   image("images/idavie/2025-10-09-13:48:47.png", width: 80%),
   caption: []
 )
-== C4 Diagram
+=== C4 Diagram
 #figure(
   image("images/idavie/2025-10-09-15:09:49.png", width: 80%),
   caption: [C4 Diagram]
